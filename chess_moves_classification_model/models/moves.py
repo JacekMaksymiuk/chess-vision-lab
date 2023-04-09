@@ -9,6 +9,8 @@ class ChessMovesModel(nn.Module):
 
     def __init__(self):
         super(ChessMovesModel, self).__init__()
+        self.relu = nn.ReLU()
+
         # Feature extraction layers
         self.conv1 = nn.Conv2d(1, 64, kernel_size=11, stride=4, padding=2)
         self.conv2 = nn.Conv2d(64, 192, kernel_size=5, padding=2)
@@ -25,18 +27,18 @@ class ChessMovesModel(nn.Module):
         self.dropout = nn.Dropout(.5)
 
     def forward(self, x):
-        x = self.max_pool(nn.ReLU(self.conv1(x)))
-        x = self.max_pool(nn.ReLU(self.conv2(x)))
-        x = nn.ReLU(self.conv3(x))
-        x = nn.ReLU(self.conv4(x))
-        x = self.max_pool(nn.ReLU(self.conv5(x)))
+        x = self.max_pool(self.relu(self.conv1(x)))
+        x = self.max_pool(self.relu(self.conv2(x)))
+        x = self.relu(self.conv3(x))
+        x = self.relu(self.conv4(x))
+        x = self.max_pool(self.relu(self.conv5(x)))
         x = self.avg_pool(x)
 
         x = torch.flatten(x, 1)
 
         x = self.dropout(x)
-        x = nn.ReLU(self.fc1(x))
+        x = self.relu(self.fc1(x))
         x = self.dropout(x)
-        x = nn.ReLU(self.fc2(x))
+        x = self.relu(self.fc2(x))
         x = self.fc3(x)
         return x

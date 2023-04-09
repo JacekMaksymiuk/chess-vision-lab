@@ -29,7 +29,6 @@ class ChessMovesDataset(Dataset):
     """
 
     FILES_PATH = "images"  # Path to directory with moves images sub folders.
-    N_IMG = 200  # Number of images for each move.
 
     def __init__(self, train: bool = True, split: float = 0.75):
         """
@@ -40,6 +39,7 @@ class ChessMovesDataset(Dataset):
         """
         self._moves = os.listdir(self.FILES_PATH)
         self._moves_to_labels = {m: e for e, m in enumerate(sorted(self._moves))}
+        self._moves_cnt = {m: len(os.listdir(self.files_path + "/" + m)) for m in self._moves}
         self.labels_to_moves = {v: k for k, v in self._moves_to_labels.items()}
         self._train = train
         self._split = split
@@ -52,9 +52,21 @@ class ChessMovesDataset(Dataset):
         Returns:
             List[str]: A list of image file paths.
         """
-        n_train = int(self.N_IMG * self._split)
-        img_number_range = range(n_train) if self._train else range(n_train, self.N_IMG)
-        return [self.FILES_PATH + "/{}/img_{}.png".format(m, n) for m in self._moves for n in img_number_range]
+        return [
+            self.FILES_PATH + "/{}/img_{}.png".format(m, n)
+            for m in self._moves for n in self._get_image_number_range_for_move(m)]
+
+    def _get_image_number_range_for_move(self, move: str) -> range:
+        """ Returns the range of image numbers for the specified move.
+
+        Args:
+            move (str): Algebraic notation move.
+
+        Returns:
+            range: The number of images for the specified move.
+        """
+        n_moves = self._moves_cnt[move]
+        return range(int(n_moves * self._split)) if self._train else range(int(n_moves * self._split), self.N_IMG)
 
     def __len__(self) -> int:
         """Returns the length of the dataset.
